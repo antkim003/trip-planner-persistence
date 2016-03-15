@@ -61,6 +61,7 @@ Tripplanner.prototype.init = function(){
       var selector = that.getChooser(category);
       if(that.days.length === 0 || !selector.val())
         return;
+      console.log(category);
       var item = that.findItemByIdAndCategory(selector.val(), category);
       that.days[that.currentIdx][category].push(item._id);
       that.renderItem(item);

@@ -43,10 +43,10 @@ apiRoute.get('/search', function(req,res,next) {
   var category = req.body.category;
   var id = req.body.id;
 
-  res.json({
-    category: category,
-    id: id
+  window[category].findOne({_id: id}).then(function(item) {
+    res.json(item);
   });
+
 });
 
 // adding stuff for that day
