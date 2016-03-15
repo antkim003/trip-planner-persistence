@@ -5,31 +5,40 @@ function Tripplanner(days, map, perm, attractions){
   this.mapper = new Mapper(map, perm);
   this.days = days;
   this.attractions = attractions;
-  if(this.days.length === 0)
-    this.addDay();
+  // if(this.days.length === 0)
+  //   this.addDay();
   this.init();
   this.renderDayPicker(0);
 }
 
-Tripplanner.prototype.addDay = function(){
-    this.days.push(
-        {
-          Hotels: [],
-          Restaurants: [],
-          Activities: []
+Tripplanner.prototype.addDay = function(idx){
+    var self = this;
+    $.ajax({
+        method: 'POST',
+        url: '/api/days',
+        data: {
+          day: this.days.length
+        },
+        success: function (responseData) {
+          console.log('successful Add day', responseData);
+          self.renderDayPicker(self.days.length);
+
+        },
+        error: function (error) {
+          console.err(error);
         }
-    );
-    return this.days.length - 1;
+    });
+    
 };
 
-
+// EVENT BINDERS
 Tripplanner.prototype.init = function(){
   var that = this;
   $('#dayPicker').on('click', 'li', function(){
     $(this).siblings().removeClass('active');
     $(this).addClass('active');
     that.currentIdx = $(this).index();
-    that.renderDay();
+    that.renderDay(that.currentIdx);
   });
 
   this.dayListIterator(function(list){
@@ -48,6 +57,7 @@ Tripplanner.prototype.init = function(){
     var that = this;
 
     btn.click(function(){
+      debugger;
       var selector = that.getChooser(category);
       if(that.days.length === 0 || !selector.val())
         return;
@@ -68,9 +78,26 @@ Tripplanner.prototype.init = function(){
 };
 
 Tripplanner.prototype.findItemByIdAndCategory = function(id, category){
-    return this.attractions[category].filter(function(_item){
-      return _item._id == id;
-    })[0];
+    // return this.attractions[category].filter(function(_item){
+    //   return _item._id == id;
+    // })[0];
+    debugger;
+    $.ajax({
+      url: 'api/search',
+      method: 'GET',
+      data: {
+        id: id,
+        category: category
+      },
+      success: function(successData){
+        console.log('successful finditembyidandcategory', successData);
+        debugger;
+        return successData;
+      },
+      error: function(err){
+        console.error('there was an error with findItemByIdAndCategory', err);
+      }
+    })
 };
 
 Tripplanner.prototype.categoryIterator = function(fn){
@@ -135,33 +162,65 @@ Tripplanner.prototype.removeItemFromDay = function(item){
 };
 
 Tripplanner.prototype.renderDayPicker = function(idx){
+    var self = this;
     this.currentIdx = idx;
 
-    $('#dayPicker').empty();
-    this.days.forEach(function(day, index){
-      var link = $('<a />').html(index + 1);
-      var li = $('<li />').append(link);
-      if(idx === index)
-        li.addClass('active');
-      $('#dayPicker').append(li);
+    $.ajax({
+        method: 'GET',
+        url: '/api/days',
+        success: function (responseData) {
+          console.log('successful Add day', responseData);
+          $('#dayPicker').empty();
+          self.days.push(responseData);
+          responseData.forEach(function(day, index){
+            var link = $('<a />').html(day.number + 1);
+            link.attr('data', day.number).attr('id', 'dayLink');
+            var li = $('<li />').append(link);
+            if(idx === index)
+              li.addClass('active');
+            $('#dayPicker').append(li);
+          });
+          self.renderDay(idx);
+        },
+        error: function (errorObj) {
+            // some code to run if the request errors out
+        }
     });
-    this.renderDay();
+
 };
 
-Tripplanner.prototype.renderDay = function(){
+Tripplanner.prototype.renderDay = function(currentIndex){
     this.resetLists();
-
+    var self = this;
     if(this.currentIdx === null)
       return;
+    $.ajax({
+      method: 'GET',
+      url: '/api/days/' + currentIndex,
+      success: function(responseData) {
+        var day = responseData;
+        self.categoryIterator(function(category){
+          var objKey = {
+            Hotels: 'hotel',
+            Restaurants: 'restaurants',
+            Activities: 'activity'
+          };
+          var categoryItems = day[objKey[category]];
+          if (!categoryItems) categoryItems = [];
 
-    var day = this.days[this.currentIdx];
-    this.categoryIterator(function(category){
-      var ids = day[category];
-      ids.forEach(function(id){
-        var item = this.findItemByIdAndCategory(id, category);
-        this.renderItem(item);
-      }, this);
-    });
+          categoryItems.forEach(function(item){
+            if (!item) {
+              self.renderItem(item);  
+            }
+            
+          }, self);
+        });
+      },
+      error: function(err) {
+
+      }
+    })
+
 };
 
 Tripplanner.prototype.renderItem = function(item){

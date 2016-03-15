@@ -48,8 +48,9 @@ app.get('/contact', function(req, res, next){
 
 app.get('/error', function(req, res, next){
   next(new Error('silly error'));
-
 });
+
+app.use('/api', require('./routes/api/days.js'));
 
 app.use(function(req, res, next){
   var error = new Error('Page Not Found');

@@ -3,6 +3,7 @@ var db = require('../db');
 var Hotel = db.models.Hotel;
 var Restaurant = db.models.Restaurant;
 var Activity = db.models.Activity;
+var Day      = db.models.Day;
 var seed = require('./seed');
 
 describe('models', function(){

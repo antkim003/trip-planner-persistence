@@ -12,6 +12,15 @@ placeSchema.methods.sayHi = function(){
   return this.address;
 };
 
+var daySchema = mongoose.Schema({
+  number: Number,
+  hotel: {type: mongoose.Schema.Types.ObjectId, ref: 'Hotel'},
+  restaurants: [{type: mongoose.Schema.Types.ObjectId, ref: 'Restaurant'}],
+  activities: [{type: mongoose.Schema.Types.ObjectId, ref: 'Activity'}]
+});
+
+var Day = mongoose.model('Day', daySchema);
+
 var Place = mongoose.model('place', placeSchema);
 
 var hotelSchema = mongoose.Schema({
@@ -44,8 +53,11 @@ var models = {
   Hotel: Hotel,
   Place: Place,
   Restaurant: Restaurant,
-  Activity: Activity
+  Activity: Activity,
+  Day: Day
 };
+
+
 
 var _conn;
 
